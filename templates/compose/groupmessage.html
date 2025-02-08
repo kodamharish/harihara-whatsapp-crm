@@ -1,0 +1,222 @@
+{% extends 'app_template/bussiness.html' %}
+{% load static %}
+
+{% block title %}Send Message to Group{% endblock %}
+
+{% block styles %}
+    {{ block.super }}
+    <style>
+        :root {
+            --primary-color: #122242;
+            --primary-hover: #2f855a;
+            --bg-color: #f4f7fa;
+            --text-dark: #131414;
+            --border-color: #e2e8f0;
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Gill Sans', Calibri, sans-serif !important;
+            font-size: 12px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            font-size: small;
+        }
+
+        .card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.742);
+            overflow: hidden;
+            font-weight: 600;
+        }
+
+        .card-header {
+            background: none;
+            border: none;
+            padding: 1.5rem;
+        }
+
+        .card-header h4 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .text-success {
+            color: var(--primary-color) !important;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-label {
+            color: var(--text-dark);
+            font-weight: bold;
+            font-size: 1.0rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            padding: 0.75rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background-color: white;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.1);
+            outline: none;
+        }
+
+        .form-control:disabled, .form-control[readonly] {
+            background-color: #f8fafc;
+            opacity: 0.8;
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        input[type="file"] {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        input[type="file"]::-webkit-file-upload-button {
+            background-color: #b8d1ea;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            margin-right: 1rem;
+            transition: var(--transition);
+        }
+
+        select[size] {
+            min-height: 150px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem auto;
+            }
+
+            .card-body {
+                padding: 1.25rem;
+            }
+
+            .btn-primary {
+                width: 100%;
+                margin-top: 1rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block bussiness_content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header text-center">
+            <h4>Send<span class="text-success"> Group Message</span></h4>
+        </div>
+        <div class="card-body">
+            <form id="sendMessageForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3 content-body">
+                        <label for="templateName" class="form-label">Template Name:</label>
+                        <select class="form-select" id="templateSelect" name="template" required>
+                            <option value="">Choose...</option>
+                            {% for template in templates %}
+                                <option value="{{ template.name }}">{{ template.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3 content-body">
+                        <label for="templateType" class="form-label">Template Type:</label>
+                        <input type="text" class="form-control" id="templateType" name="templateType" readonly>
+                    </div>
+                </div>
+                
+                <div class="content-body mb-3">
+                    <label for="templateMessage" class="form-label">Template Message:</label>
+                    <textarea class="form-control" id="templateMessage" name="templateMessage" style="height: 50px;" readonly></textarea>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3 content-body">
+                        <label for="businessNumber" class="form-label">Select Group/s:</label>
+                        <select id="businessNumber" name="businessNumber" size="5" class="form-select" required>
+                            {% for group in groups %}
+                                <option value="{{ group.id }}">{{ group.group_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3 content-body">
+                        <label for="uploadFile" class="form-label">Upload Media File:</label>
+                        <input type="file" class="form-control" id="uploadFile" name="uploadFile" accept="image/*,video/*">
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary mt-3">Send Message</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var templates = [
+            {% for template in templates %}
+                {
+                    name: "{{ template.name }}",
+                    template_type: "{{ template.template_type }}",
+                    message: "{{ template.message|escapejs }}"
+                },
+            {% endfor %}
+        ];
+
+        var templateSelect = document.getElementById('templateSelect');
+        var templateTypeInput = document.getElementById('templateType');
+        var templateMessageTextarea = document.getElementById('templateMessage');
+
+        templateSelect.addEventListener('change', function() {
+            var selectedTemplateName = templateSelect.value;
+
+            if (selectedTemplateName) {
+                var selectedTemplate = templates.find(function(template) {
+                    return template.name === selectedTemplateName;
+                });
+
+                if (selectedTemplate) {
+                    templateTypeInput.value = selectedTemplate.template_type;
+                    templateMessageTextarea.value = selectedTemplate.message;
+                } else {
+                    // Clear fields if template not found
+                    templateTypeInput.value = '';
+                    templateMessageTextarea.value = '';
+                }
+            } else {
+                // Clear fields if no template selected
+                templateTypeInput.value = '';
+                templateMessageTextarea.value = '';
+            }
+        });
+    });
+</script>
+{% endblock bussiness_content %}

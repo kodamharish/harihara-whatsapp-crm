@@ -1,0 +1,123 @@
+{% extends 'app_template/bussiness.html'%}
+
+{% load static %}
+
+{% block title %} Create Group {% endblock %}
+{% block styles %}
+    {{ block.super }}
+    <style>
+        .container {
+            max-width: 900px !important;
+            margin: 2rem auto;
+            padding-left: 100px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.518);
+            background: white;
+            padding: 2rem;
+            max-width: 110%;
+            
+        }
+        
+        .card-header {
+            background: none;
+            border: none;
+            padding: 1rem 0 2rem;
+        }
+        
+        .card-header h4 {
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0;
+        }
+        
+        .card-header .text-success {
+            color: #38a169 !important;
+        }
+        
+        .group-form .form-row {
+            margin-bottom: 1.5rem;
+        }
+        
+        .group-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .group-form input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .group-form input:focus {
+            outline: none;
+            border-color: #38a169;
+            box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.1);
+        }
+        
+        .btn-primary {
+            background-color: #38a169;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            background-color: #122242;
+            transform: translateY(-1px);
+        }
+        
+        .alert {
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: none;
+            background-color: #c6f6d5;
+            color: #2f855a;
+        }
+    </style>
+{% endblock %}
+
+{% block bussiness_content %}
+<div class="container">
+    <div class="card">
+        <form class="group-form" method="POST">
+            {% csrf_token %}
+            <div class="card-header text-center">
+                <h4>Create <span class="text-success">Group</span></h4>
+            </div>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success" role="alert">
+                        Group created successfully
+                    </div>
+                {% endfor %}
+            {% endif %}
+            <div class="form-row">
+                <label for="group-name">Group Name :</label>
+                <input type="text" id="group-name" name="name" placeholder="Enter group name" required>
+            </div>
+            <div class="form-row">
+                <label for="group-description">Group Description :</label>
+                <input type="text" id="group-description" name="description" placeholder="Enter group description" required>
+            </div>
+            <div class="form-row">
+                <button class="btn btn-primary" type="submit">Create Group</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock bussiness_content %}

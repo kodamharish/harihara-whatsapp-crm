@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator and Preview Interface</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            border-radius: 10px;
+            /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
+        }
+        .preview-box {
+            min-height: 350px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+            position: relative;
+        }
+        .media-preview {
+            display: block;
+            width: 100%;
+            max-height: 200px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .document-preview {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 15px;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .document-preview i {
+            font-size: 2rem;
+            color: #0d6efd;
+        }
+        .document-preview span {
+            font-size: 1rem;
+            color: #333;
+            word-break: break-word;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .button-group a {
+            text-decoration: none;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 5px;
+            color: #ffffff;
+            background-color: #0d6efd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .button-group a:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+        #previewTimestamp {
+            text-align: right;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        #previewHeader {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        #previewFooter {
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-align: left;
+        }
+        .link-container {
+            margin-top: 15px;
+        }
+        .preview-buttons a {
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #eaf4ff;
+            color: #0d6efd;
+            text-align: center;
+            font-weight: 500;
+        }
+        .preview-buttons a:hover {
+            background-color: #cce4ff;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-5">
+    
+    <div class="row g-4">
+        <!-- Creator Card -->
+        <div class="col-md-8">
+            <div class="card p-3">
+
+                <div class="mb-3">
+                    <label for="template_name" class="form-label">Template Name</label>
+                    <input type="text" class="form-control"  name="template_name">
+                </div>
+
+                <div class="mb-3">
+                    <label for="messageType" class="form-label">Language</label>
+                    <select class="form-select dropdown-style" id="language" name="language">
+                        <option value="English">English</option>
+                       
+                        
+                    </select>
+                </div>
+               
+                <!-- <div class="mb-3">
+                    <label for="headerText" class="form-label">Header</label>
+                    <input type="text" class="form-control" id="headerText" placeholder="Enter header text">
+                </div> -->
+                <div class="mb-3">
+                    <label for="messageType" class="form-label">Template Type</label>
+                    <select class="form-select dropdown-style" id="messageType">
+                        <option value="text">Text</option>
+                        <option value="text+image">Text + Image</option>
+                        <option value="text+video">Text + Video</option>
+                        <option value="text+document">Text + Document</option>
+                        <option value="text+button">Text + Button</option>
+                        <option value="text+image+button">Text + Image + Button</option>
+                        <option value="text+video+button">Text + Video + Button</option>
+                        <option value="text+document+button">Text + Document + Button</option>
+                    </select>
+                </div>
+                <div id="textMessageContainer" class="mb-3">
+                    <label for="textMessage" class="form-label">Template Message</label>
+                    <textarea class="form-control" id="textMessage" rows="3" ></textarea>
+                </div>
+                <div id="mediaUploadContainer" class="mb-3 d-none">
+                    <label for="mediaUpload" class="form-label">Upload Media</label>
+                    <input type="file" class="form-control" id="mediaUpload" accept="">
+                </div>
+                <div id="buttonFields" class="mb-3 d-none">
+                    <div id="buttonContainer">
+                        <div class="link-container">
+                            <label for="buttonLinkName" class="form-label">Button Name</label>
+                            <input type="text" class="form-control mb-2" id="buttonLinkName" placeholder="Enter button name">
+                            <label for="buttonLinkUrl" class="form-label">Button URL</label>
+                            <input type="url" class="form-control" id="buttonLinkUrl" placeholder="Enter button URL">
+                        </div>
+                    </div>
+                    <button id="addButtonField" class="btn btn-secondary mt-3">Add Another Button</button>
+                </div>
+                <div class="mb-3">
+                    <label for="footerText" class="form-label">Footer</label>
+                    <input type="text" class="form-control" id="footerText" >
+                </div>
+
+                <!-- Buttons -->
+        <div id="buttonsContainer" class="mb-3">
+            <label class="form-label">Buttons (Optional):</label>
+            <button type="button" class="btn btn-secondary mb-2" onclick="addButton()">Add Button</button>
+        </div>
+            </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="col-md-4">
+            <div class="card p-3">
+                <h5 class="card-title">Template Preview</h5>
+                <div class="preview-box" id="previewBox">
+                    <div id="previewHeader"></div>
+                    <div id="previewMedia"></div>
+                    <div id="previewMessageText"></div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div id="previewFooter"></div>
+                        <div id="previewTimestamp" class="text-muted"></div>
+                    </div>
+                    <div id="previewButtons" class="button-group"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const messageType = document.getElementById("messageType");
+    const mediaUpload = document.getElementById("mediaUpload");
+    const mediaUploadContainer = document.getElementById("mediaUploadContainer");
+    const buttonFields = document.getElementById("buttonFields");
+    const buttonContainer = document.getElementById("buttonContainer");
+    const previewMedia = document.getElementById("previewMedia");
+    const previewHeader = document.getElementById("previewHeader");
+    const previewMessageText = document.getElementById("previewMessageText");
+    const previewFooter = document.getElementById("previewFooter");
+    const previewTimestamp = document.getElementById("previewTimestamp");
+    const previewButtons = document.getElementById("previewButtons");
+    const addButtonField = document.getElementById("addButtonField");
+
+    messageType.addEventListener("change", () => {
+        const type = messageType.value;
+        previewMedia.innerHTML = "";
+        mediaUploadContainer.classList.toggle("d-none", !type.includes("image") && !type.includes("video") && !type.includes("document"));
+        buttonFields.classList.toggle("d-none", !type.includes("button"));
+        mediaUpload.accept = type.includes("image") ? "image/*" : type.includes("video") ? "video/*" : type.includes("document") ? ".pdf" : "";
+    });
+
+    mediaUpload.addEventListener("change", () => {
+        const file = mediaUpload.files[0];
+        if (!file) return;
+        const fileURL = URL.createObjectURL(file);
+        previewMedia.innerHTML = file.type.startsWith("image/") ? `<img src="${fileURL}" class="media-preview">` :
+                                file.type.startsWith("video/") ? `<video src="${fileURL}" class="media-preview" controls></video>` :
+                                file.type === "application/pdf" ? `<div class="document-preview"><i class="fas fa-file-pdf"></i><span>${file.name}</span></div>` : "";
+    });
+
+   /* document.getElementById("headerText").addEventListener("input", () => {
+        previewHeader.textContent = document.getElementById("headerText").value;
+    }); */
+
+    document.getElementById("textMessage").addEventListener("input", () => {
+        previewMessageText.textContent = document.getElementById("textMessage").value;
+    });
+
+    document.getElementById("footerText").addEventListener("input", () => {
+        previewFooter.textContent = document.getElementById("footerText").value;
+    });
+
+    setInterval(() => {
+        const now = new Date();
+        previewTimestamp.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }, 1000);
+
+    addButtonField.addEventListener("click", () => {
+        const newField = document.createElement("div");
+        newField.className = "link-container";
+        newField.innerHTML = `
+            <label for="buttonLinkName" class="form-label">Button Name</label>
+            <input type="text" class="form-control mb-2" placeholder="Enter button name">
+            <label for="buttonLinkUrl" class="form-label">Button URL</label>
+            <input type="url" class="form-control" placeholder="Enter button URL">
+        `;
+        buttonContainer.appendChild(newField);
+    });
+
+    buttonContainer.addEventListener("input", () => {
+        previewButtons.innerHTML = "";
+        const buttons = buttonContainer.querySelectorAll(".link-container");
+        buttons.forEach(button => {
+            const name = button.querySelector("input[placeholder='Enter button name']").value;
+            const url = button.querySelector("input[placeholder='Enter button URL']").value;
+            if (name && url) {
+                const btn = document.createElement("a");
+                btn.href = url;
+                btn.textContent = name;
+                btn.className = "btn btn-primary";
+                btn.target = "_blank";
+                previewButtons.appendChild(btn);
+            }
+        });
+    });
+</script>
+
+<script>
+    function addButton() {
+        const container = document.getElementById('buttonsContainer');
+        const buttonDiv = document.createElement('div');
+        buttonDiv.className = "card p-3 mb-2"; 
+        buttonDiv.innerHTML = `
+            <div class="mb-2">
+                <label for="button_label" class="form-label">Button Label:</label>
+                <input type="text" class="form-control" name="button_label[]" required>
+            </div>
+            <div class="mb-2">
+                <label for="button_type" class="form-label">Button Type:</label>
+                <select class="form-select" name="button_type[]" required>
+                    <option value="url">URL</option>
+                    <option value="quick_reply">Quick Reply</option>
+                    <option value="call_to_action">Call to Action</option>
+                </select>
+            </div>
+            <div class="mb-2">
+                <label for="button_value" class="form-label">Button Value (URL or Payload):</label>
+                <input type="text" class="form-control" name="button_value[]" required>
+            </div>
+            <button type="button" class="btn btn-danger mt-2" onclick="removeButton(this)">Remove Button</button>
+        `;
+        container.appendChild(buttonDiv);
+    }
+    
+    function removeButton(button) {
+        const container = document.getElementById('buttonsContainer');
+        container.removeChild(button.parentElement);
+    }
+    
+</script>
+</body>
+</html>
