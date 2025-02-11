@@ -1,0 +1,107 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Chat Messages</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="container mt-4">
+
+    <h2 class="text-center mb-4">WhatsApp Chat Messages</h2>
+
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Sender Number</th>
+                <th>Message</th>
+                <th>Received At</th>
+                <th>Reply</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for chat in chats %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ chat.sender_number }}</td>
+                <td>{{ chat.message_text }}</td>
+                <td>{{ chat.timestamp }}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm reply-btn" data-phone="{{ chat.sender_number }}">
+                        Reply
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Reply Modal -->
+    <div id="replyModal" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reply to Message</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="replyForm">
+                        <input type="hidden" id="replyPhoneNumber">
+                        <div class="form-group">
+                            <label for="replyMessage">Message</label>
+                            <textarea id="replyMessage" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">Send Reply</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Open the reply modal
+            $(".reply-btn").click(function () {
+                let phoneNumber = $(this).data("phone");
+                $("#replyPhoneNumber").val(phoneNumber);
+                $("#replyModal").modal("show");
+            });
+
+            // Handle reply form submission
+            $("#replyForm").submit(function (event) {
+                event.preventDefault();
+
+                let phoneNumber = $("#replyPhoneNumber").val();
+                let message = $("#replyMessage").val();
+
+                $.ajax({
+                    url: "{% url 'send_whatsapp_reply' %}",
+                    method: "POST",
+                    data: {
+                        phone_number: phoneNumber,
+                        message_text: message,
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    success: function (response) {
+                        alert("Reply sent successfully!");
+                        $("#replyModal").modal("hide");
+                        $("#replyMessage").val(""); // Clear input
+                    },
+                    error: function () {
+                        alert("Failed to send reply.");
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

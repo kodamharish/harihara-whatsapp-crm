@@ -168,3 +168,22 @@ class MessageLog(models.Model):
 
     def __str__(self):
         return f"{self.template_name} - {self.mobile_number} ({self.status})"
+
+
+
+
+from django.db import models
+from django.utils.timezone import now
+
+class ChatMessage(models.Model):
+    message_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    sender_number = models.CharField(max_length=20)  # User's number
+    receiver_number = models.CharField(max_length=20)  # Business number
+    message_text = models.TextField()
+    timestamp = models.DateTimeField(default=now)
+    direction = models.CharField(
+        max_length=10, choices=[("sent", "Sent"), ("received", "Received")]
+    )  # Indicates if it's a sent or received message
+
+    def __str__(self):
+        return f"{self.sender_number} -> {self.receiver_number}: {self.message_text}"

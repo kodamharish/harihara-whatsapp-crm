@@ -78,7 +78,19 @@ def send_message_88(phone_number, template, media_id=None, media_type=None, vari
 import requests
 
 
-def send_message44(phone_number, template, media_id=None, media_type=None, variables=None):
+
+
+
+
+
+
+
+
+
+import requests
+
+
+def send_message_working1(phone_number, template, media_id=None, media_type=None, variables=None):
     """
     Function to send WhatsApp messages using WhatsApp Business API.
     This version ensures messages are sent only to the registered test number.
@@ -95,7 +107,7 @@ def send_message44(phone_number, template, media_id=None, media_type=None, varia
 
     # Headers for authentication
     headers = {
-        "Authorization": "Bearer EAAXdIEEqkQsBOZC0dIA3JZCTmZA7GhiAiFfZAZBwZBaKElZBCl2O1nboIqScEYK7uKQ4YhzAKJm1ZCMKq9Fnzh5LCU9kuWq6LEzFWC4F94im0KWYsY0vOJnLJzG2L8KiyEmVBnOr14QVP4Gtyiba4xknkyb2ahuXzeJAPWegUFk6PD7l1LZA6WBQrp7Rl55Vhz6GawA26G43u3WOEbf7J5bwoJHAEBlYZD",  # Replace with a valid token
+        "Authorization": "Bearer EAAXdIEEqkQsBOZBYmTDQhs4XwrZCqaAVMZCZC8sefN0xn9EYqWhqfIZBJcwGcCZC4iZCKFZBvM5ZB0TZBM5OsbvmYFy9SQp6yiv6Lk9XNzBNdwSVtN000Na3LZCcgfyzNZAIzGie4SDri0cCdX8R53mnqH1G78ul9X477MQV5KKAK6JOoXBtKIFveF10sR32KmxUSZBz4iFBFJZAibmMdTzJj6wJZAvz7NgXD0ZD",  # Replace with a valid token
         "Content-Type": "application/json"
     }
 
@@ -136,6 +148,9 @@ def send_message44(phone_number, template, media_id=None, media_type=None, varia
     response = requests.post(url, headers=headers, json=data)
     response_data = response.json() 
     response_status = "Sent" if response.status_code == 200 else "Failed"
+    message_id = None
+    if response.status_code == 200 and 'messages' in response_data:
+        message_id = response_data['messages'][0]['id']  # Capture message ID for tracking
     
     # Logging response
     if response.status_code == 200:
@@ -148,6 +163,8 @@ def send_message44(phone_number, template, media_id=None, media_type=None, varia
         template_name=template.name,
         mobile_number=phone_number,
         status=response_status,
+        message_id=message_id  # Store message ID for tracking status updates
+
     )
 
     return response
@@ -156,82 +173,31 @@ def send_message44(phone_number, template, media_id=None, media_type=None, varia
 
 
 import requests
-import json
 from .models import MessageLog
+from django.utils.timezone import now
+
 
 def send_message(phone_number, template, media_id=None, media_type=None, variables=None):
     """
     Function to send WhatsApp messages using WhatsApp Business API.
-    Logs the message_id for tracking.
+    This version directly saves message data into the database.
     """
-
+    # WhatsApp Cloud API Endpoint
     url = "https://graph.facebook.com/v21.0/122101611134002996/messages"
+
+    # Replace this with the test number registered in WhatsApp Business API
     TEST_PHONE_NUMBER = "919133121164"  # Replace with your verified test number
-    phone_number = TEST_PHONE_NUMBER  # Override the number
 
+    # Override the input phone_number with the test number
+    phone_number = TEST_PHONE_NUMBER
+
+    # Headers for authentication
     headers = {
-        "Authorization": "Bearer EAAXdIEEqkQsBOZC0dIA3JZCTmZA7GhiAiFfZAZBwZBaKElZBCl2O1nboIqScEYK7uKQ4YhzAKJm1ZCMKq9Fnzh5LCU9kuWq6LEzFWC4F94im0KWYsY0vOJnLJzG2L8KiyEmVBnOr14QVP4Gtyiba4xknkyb2ahuXzeJAPWegUFk6PD7l1LZA6WBQrp7Rl55Vhz6GawA26G43u3WOEbf7J5bwoJHAEBlYZD",  # Replace with a valid token
+        "Authorization": "Bearer EAAXdIEEqkQsBO87qWZArSDzoq2wpB8NP08p0dgZCbIUMlh9swkeDq6ZAJBDSCCovfJbrd56IHw7cpvBvx45BSsktDoFrtI8kJV74o50viaraZCBzuNnJ3ehTbhz8ayZCQ31ZCGbF74vqCC76YCgjWMNQEVUzhPIdW3D52mmKZBaBgQhZCqZBli9HcjGW6PRCqktitdklYRv3Yqtp24OlSRObUxE5o5rwZD",  # Replace with a valid token
         "Content-Type": "application/json"
     }
 
-    data = {
-        "messaging_product": "whatsapp",
-        "to": phone_number,
-        "type": "template",
-        "template": {
-            "name": template.name,
-            "language": {"code": "en_US"},
-            "components": []
-        }
-    }
-
-    if media_id and media_type:
-        data['template']['components'].append({
-            "type": "header",
-            "parameters": [{"type": media_type, media_type: {"id": media_id}}]
-        })
-
-    if variables:
-        data['template']['components'].append({
-            "type": "body",
-            "parameters": [{"type": "text", "text": var} for var in variables]
-        })
-
-    response = requests.post(url, headers=headers, json=data)
-    response_data = response.json()
-    
-    message_id = None
-    if response.status_code == 200 and "messages" in response_data:
-        message_id = response_data["messages"][0]["id"]  # Extract message_id
-
-    response_status = "Sent" if message_id else "Failed"
-
-    # Save message log
-    MessageLog.objects.create(
-        message_id=message_id,
-        template_name=template.name,
-        mobile_number=phone_number,
-        status=response_status,
-    )
-
-    return response
-
-
-import requests
-import json
-from django.utils.timezone import now
-from .models import MessageLog
-
-def send_message_00_new(phone_number, template, media_id=None, media_type=None, variables=None):
-    url = "https://graph.facebook.com/v21.0/122101611134002996/messages"
-
-    headers = {
-        #"Authorization": "Bearer EAAIMMdlJzZCQBO3cSvIwXzUHpjkgrIPEunjJMmCCf6aLrWE1iqVtSnqHwXfO2zZBtTB3F6YInIRoNhm0G2ZBwBKzWWYeHTDw1ilf1tkNg2TTQTNdIybUkzy3mqWVu5Ra0APFlTxjpQZCocpxFck1XJUnBHVIlP7zhMEnakDh4OF3V0VDmCupn0B8tbeWkBbu",
-        "Authorization": "Bearer EAAXdIEEqkQsBOZC0dIA3JZCTmZA7GhiAiFfZAZBwZBaKElZBCl2O1nboIqScEYK7uKQ4YhzAKJm1ZCMKq9Fnzh5LCU9kuWq6LEzFWC4F94im0KWYsY0vOJnLJzG2L8KiyEmVBnOr14QVP4Gtyiba4xknkyb2ahuXzeJAPWegUFk6PD7l1LZA6WBQrp7Rl55Vhz6GawA26G43u3WOEbf7J5bwoJHAEBlYZD",
-
-        "Content-Type": "application/json"
-    }
-
+    # Constructing the payload
     data = {
         "messaging_product": "whatsapp",
         "to": phone_number,
@@ -264,100 +230,39 @@ def send_message_00_new(phone_number, template, media_id=None, media_type=None, 
             "parameters": [{"type": "text", "text": var} for var in variables]
         })
 
+    # Sending the request
     response = requests.post(url, headers=headers, json=data)
-    response_data = response.json() 
+    response_data = response.json()
     response_status = "Sent" if response.status_code == 200 else "Failed"
-    
     message_id = None
+
+    # Extract message ID if the message is successfully sent
     if response.status_code == 200 and 'messages' in response_data:
-        message_id = response_data['messages'][0]['id']  # Capture message ID for tracking
+        message_id = response_data['messages'][0]['id']
 
-    if response.status_code == 200:
-        print(f"Message sent successfully to {phone_number}!")
-    else:
-        print(f"Failed to send message to {phone_number}. Response:", response_data)
-
-    # Logging the message attempt
-    MessageLog.objects.create(
-        template_name=template.name,
-        mobile_number=phone_number,
-        status=response_status,
-        message_id=message_id  # Store message ID for tracking status updates
-    )
+    # Log the message attempt directly in the MessageLog model
+    try:
+        MessageLog.objects.create(
+            message_id=message_id,
+            template_name=template.name,
+            mobile_number=phone_number,
+            status=response_status,
+            timestamp=now() if response_status == "Sent" else None,
+            failure_reason=response_data.get("error", {}).get("message", "") if response_status == "Failed" else None
+        )
+        if response_status == "Sent":
+            print(f"✅ Message sent successfully to {phone_number}. Message ID: {message_id}")
+        else:
+            print(f"❌ Failed to send message to {phone_number}. Error: {response_data}")
+    except Exception as e:
+        print(f"Error saving MessageLog: {e}")
 
     return response
 
 
 
-import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from .models import MessageLog
 
-@csrf_exempt
-def whatsapp_webhook44(request):
-    if request.method == "GET":
-        # Verification request from WhatsApp Business API
-        VERIFY_TOKEN = "harish"
-        mode = request.GET.get("hub.mode")
-        token = request.GET.get("hub.verify_token")
-        challenge = request.GET.get("hub.challenge")
 
-        if mode and token == VERIFY_TOKEN:
-            return JsonResponse({"hub.challenge": challenge}, status=200)
-        return JsonResponse({"error": "Invalid token"}, status=403)
-
-    if request.method == "POST":
-        payload = json.loads(request.body.decode('utf-8'))
-
-        if "entry" in payload:
-            for entry in payload["entry"]:
-                for change in entry.get("changes", []):
-                    value = change.get("value", {})
-                    
-                    # Message Status Updates
-                    if "statuses" in value:
-                        for status in value["statuses"]:
-                            message_id = status.get("id")
-                            message_status = status.get("status")
-                            timestamp = status.get("timestamp")
-                            message_type = status.get("type", "")
-
-                            # Find and update the message log
-                            try:
-                                message_log = MessageLog.objects.get(message_id=message_id)
-                                message_log.status = message_status
-                                message_log.timestamp = timestamp
-
-                                # If message is read
-                                if message_status == "read":
-                                    message_log.read_at = now()
-
-                                # If message failed
-                                elif message_status == "failed":
-                                    message_log.failure_reason = status.get("errors", [{}])[0].get("title", "Unknown Error")
-
-                                message_log.save()
-                            except MessageLog.DoesNotExist:
-                                pass
-
-                    # Capture Interactive Button Click
-                    if "messages" in value:
-                        for message in value["messages"]:
-                            if "interactive" in message:
-                                message_id = message.get("id")
-                                button_text = message["interactive"].get("button_reply", {}).get("title")
-
-                                # Update the message log with button click
-                                try:
-                                    message_log = MessageLog.objects.get(message_id=message_id)
-                                    message_log.button_clicked = button_text
-                                    message_log.button_clicked_at = now()
-                                    message_log.save()
-                                except MessageLog.DoesNotExist:
-                                    pass
-
-        return JsonResponse({"status": "Received"}, status=200)
 
 
 
@@ -367,67 +272,241 @@ from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from .models import MessageLog
 
+
 @csrf_exempt
 def whatsapp_webhook(request):
+    VERIFY_TOKEN = "harish"  # Your verification token
+
     if request.method == "GET":
-        VERIFY_TOKEN = "harish"
+        # Handle verification requests
         mode = request.GET.get("hub.mode")
         token = request.GET.get("hub.verify_token")
         challenge = request.GET.get("hub.challenge")
 
-        if mode and token == VERIFY_TOKEN:
-            return JsonResponse({"hub.challenge": challenge}, status=200)
-        return JsonResponse({"error": "Invalid token"}, status=403)
+        if mode == "subscribe" and token == VERIFY_TOKEN:
+            return HttpResponse(challenge, status=200)  # Return plain text response
+        else:
+            return JsonResponse({"error": "Invalid token or mode"}, status=403)
 
-    if request.method == "POST":
-        payload = json.loads(request.body.decode('utf-8'))
+    elif request.method == "POST":
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            print(f"Webhook payload received: {json.dumps(payload, indent=2)}")
 
-        if "entry" in payload:
-            for entry in payload["entry"]:
-                for change in entry.get("changes", []):
-                    value = change.get("value", {})
+            if "entry" in payload:
+                for entry in payload["entry"]:
+                    for change in entry.get("changes", []):
+                        value = change.get("value", {})
 
-                    # **Handling Delivery Status Updates**
-                    if "statuses" in value:
-                        for status in value["statuses"]:
-                            message_id = status.get("id")
-                            message_status = status.get("status")
-                            timestamp = status.get("timestamp")
-                            message_type = status.get("type", "")
+                        # Handle delivery status updates (including 'read')
+                        if "statuses" in value:
+                            for status in value["statuses"]:
+                                message_id = status.get("id")
+                                message_status = status.get("status")
+                                timestamp = status.get("timestamp")
 
-                            # Update the message log
-                            try:
-                                message_log = MessageLog.objects.get(message_id=message_id)
-                                message_log.status = message_status
-                                message_log.timestamp = timestamp
-
+                                # Process 'read' status
                                 if message_status == "read":
-                                    message_log.read_at = now()
-                                elif message_status == "failed":
-                                    message_log.failure_reason = status.get("errors", [{}])[0].get("title", "Unknown Error")
+                                    try:
+                                        message_log = MessageLog.objects.get(message_id=message_id)
+                                        message_log.read_at = now()  # Save current time as read time
+                                        message_log.save()
+                                        print(f"Updated read_at for MessageLog with ID {message_id}")
+                                    except MessageLog.DoesNotExist:
+                                        print(f"MessageLog not found for ID: {message_id}")
+                        
 
-                                message_log.save()
-                            except MessageLog.DoesNotExist:
-                                pass
+                        # Handle interactive button clicks
+                        if "messages" in value:
+                            for message in value["messages"]:
+                                if "interactive" in message:
+                                    message_id = message.get("id")
+                                    button_text = message["interactive"].get("button_reply", {}).get("title")
 
-                    # **Handling Interactive Button Clicks**
-                    if "messages" in value:
-                        for message in value["messages"]:
-                            if "interactive" in message:
-                                message_id = message.get("id")
-                                button_text = message["interactive"].get("button_reply", {}).get("title")
+                                    try:
+                                        message_log = MessageLog.objects.get(message_id=message_id)
+                                        message_log.button_clicked = button_text
+                                        message_log.button_clicked_at = now()  # Save current time as button click time
+                                        message_log.save()
+                                        print(f"Updated button_clicked for MessageLog with ID {message_id}")
+                                    except MessageLog.DoesNotExist:
+                                        print(f"MessageLog not found for ID: {message_id}")
 
+            return JsonResponse({"status": "Received"}, status=200)
+        except Exception as e:
+            print(f"Error processing webhook payload: {str(e)}")
+            return JsonResponse({"error": "Server error"}, status=500)
+
+    else:
+        return JsonResponse({"error": "Invalid HTTP method"}, status=405)
+
+
+
+
+
+
+
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import ChatMessage
+import requests
+from django.utils.timezone import now
+
+def chat_messages_view(request):
+    """
+    Display received WhatsApp messages for admins.
+    """
+    chats = ChatMessage.objects.filter(direction="received").order_by("-timestamp")  # Show only received messages
+    return render(request, "templates/chat_messages.html", {"chats": chats})
+
+
+@csrf_exempt
+def send_whatsapp_reply(request):
+    """
+    API to send a WhatsApp reply from the admin panel.
+    """
+    if request.method == "POST":
+        phone_number = request.POST.get("phone_number")
+        message_text = request.POST.get("message_text")
+
+        if not phone_number or not message_text:
+            return JsonResponse({"error": "Missing phone number or message text"}, status=400)
+
+        url = "https://graph.facebook.com/v21.0/122101611134002996/messages"
+
+        headers = {
+            "Authorization": "Bearer EAAXdIEEqkQsBO87qWZArSDzoq2wpB8NP08p0dgZCbIUMlh9swkeDq6ZAJBDSCCovfJbrd56IHw7cpvBvx45BSsktDoFrtI8kJV74o50viaraZCBzuNnJ3ehTbhz8ayZCQ31ZCGbF74vqCC76YCgjWMNQEVUzhPIdW3D52mmKZBaBgQhZCqZBli9HcjGW6PRCqktitdklYRv3Yqtp24OlSRObUxE5o5rwZD",  # Replace with a valid token
+            "Content-Type": "application/json"
+        }
+
+        data = {
+            "messaging_product": "whatsapp",
+            "to": phone_number,
+            "type": "text",
+            "text": {
+                "body": message_text
+            }
+        }
+
+        response = requests.post(url, headers=headers, json=data)
+        response_data = response.json()
+        response_status = "Sent" if response.status_code == 200 else "Failed"
+        message_id = None
+
+        if response.status_code == 200 and 'messages' in response_data:
+            message_id = response_data['messages'][0]['id']
+
+        # Log the reply message
+        ChatMessage.objects.create(
+            message_id=message_id,
+            sender_number="BUSINESS_NUMBER",  # Replace with your business number
+            receiver_number=phone_number,
+            message_text=message_text,
+            direction="sent",
+            timestamp=now()
+        )
+
+        return JsonResponse({"status": response_status}, status=200)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
+
+
+import json
+import logging
+from django.http import HttpResponse, JsonResponse
+from django.utils.timezone import now
+from django.views.decorators.csrf import csrf_exempt
+from .models import MessageLog
+
+# Initialize logger
+logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def whatsapp_webhook_working1(request):
+    VERIFY_TOKEN = "harish"  # Your verification token
+
+    if request.method == "GET":
+        # Extract query parameters
+        mode = request.GET.get("hub.mode")
+        token = request.GET.get("hub.verify_token")
+        challenge = request.GET.get("hub.challenge")
+
+        logger.info(f"Verification request received: mode={mode}, token={token}, challenge={challenge}")
+
+        # Verify the token and respond with the challenge
+        if mode == "subscribe" and token == VERIFY_TOKEN:
+            return HttpResponse(challenge, status=200)  # Return plain text response
+        else:
+            logger.error("Invalid verification token or mode")
+            return JsonResponse({"error": "Invalid token or mode"}, status=403)
+
+    elif request.method == "POST":
+        # Process the payload
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            logger.info(f"Webhook payload received: {json.dumps(payload, indent=2)}")
+
+            if "entry" in payload:
+                for entry in payload["entry"]:
+                    for change in entry.get("changes", []):
+                        value = change.get("value", {})
+
+                        # **Handle Delivery Status Updates**
+                        if "statuses" in value:
+                            for status in value["statuses"]:
+                                message_id = status.get("id")
+                                message_status = status.get("status")
+                                timestamp = status.get("timestamp")
+                                message_type = status.get("type", "")
+
+                                logger.info(f"Processing status update: {message_id} -> {message_status}")
+
+                                # Update the message log
                                 try:
                                     message_log = MessageLog.objects.get(message_id=message_id)
-                                    message_log.button_clicked = button_text
-                                    message_log.button_clicked_at = now()
+                                    message_log.status = message_status
+                                    message_log.timestamp = timestamp
+
+                                    if message_status == "read":
+                                        message_log.read_at = now()
+                                    elif message_status == "failed":
+                                        error_title = status.get("errors", [{}])[0].get("title", "Unknown Error")
+                                        message_log.failure_reason = error_title
+
                                     message_log.save()
                                 except MessageLog.DoesNotExist:
-                                    pass
+                                    logger.warning(f"MessageLog not found for ID: {message_id}")
 
-        return JsonResponse({"status": "Received"}, status=200)
+                        # **Handle Interactive Button Clicks**
+                        if "messages" in value:
+                            for message in value["messages"]:
+                                if "interactive" in message:
+                                    message_id = message.get("id")
+                                    button_text = message["interactive"].get("button_reply", {}).get("title")
 
+                                    logger.info(f"Button clicked: {button_text} (Message ID: {message_id})")
 
+                                    try:
+                                        message_log = MessageLog.objects.get(message_id=message_id)
+                                        message_log.button_clicked = button_text
+                                        message_log.button_clicked_at = now()
+                                        message_log.save()
+                                    except MessageLog.DoesNotExist:
+                                        logger.warning(f"MessageLog not found for ID: {message_id}")
+
+            return JsonResponse({"status": "Received"}, status=200)
+        except Exception as e:
+            logger.error(f"Error processing webhook payload: {str(e)}")
+            return JsonResponse({"error": "Server error"}, status=500)
+
+    else:
+        logger.warning(f"Invalid HTTP method: {request.method}")
+        return JsonResponse({"error": "Invalid HTTP method"}, status=405)
 
 
 def Media_Id_Generator(media_file):
@@ -573,6 +652,30 @@ def CreateTemplate(request):
     templates = Template.objects.filter(company=user.company)
 
     return render(request, 'Templates/CreateTemplate.html', {'templates': templates})
+
+def CreateTemplate1(request):
+    company_username = request.session.get('username')
+    user = User.objects.get(username=company_username)
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        language = request.POST.get('language')
+        category = request.POST.get('category')
+        template_type = request.POST.get('template_type')
+        message = request.POST.get('message')
+        
+        Template.objects.create(
+            company=user.company,
+            name=name,
+            language=language,
+            category=category,
+            template_type=template_type,
+            message=message
+        )
+        return redirect('ManageTemplate')
+
+    templates = Template.objects.filter(company=user.company)
+
+    return render(request, 'Templates/CreateTemplate1.html', {'templates': templates})
 
 def ManageTemplate(request):
     company_id = request.session.get('company_id')

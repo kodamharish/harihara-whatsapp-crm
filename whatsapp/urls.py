@@ -22,6 +22,10 @@ urlpatterns = [
 
     # Template Section
     path('CreateTemplate/', CreateTemplate, name='CreateTemplate'),
+    path('CreateTemplate1/', CreateTemplate1, name='CreateTemplate1'),
+    path("chat-messages/", chat_messages_view, name="chat_messages"),
+    path("send-reply/", send_whatsapp_reply, name="send_whatsapp_reply"),
+
     path('ManageTemplate/', ManageTemplate, name='ManageTemplate'),
     path('DeleteTemplate/<int:id>/', DeleteTemplate, name='DeleteTemplate'),
 
